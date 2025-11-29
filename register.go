@@ -213,7 +213,6 @@ func FinalizeRegistration(bot *tgbotapi.BotAPI, tgID int64) {
 		height, weight, age, d["goal"], d["activity"], cal,
 	))
 
-	// зачистка
 	delete(regStates, tgID)
 	delete(regData, tgID)
 }

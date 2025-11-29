@@ -5,12 +5,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func AddFoodHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u User) {
-	
 	args := strings.SplitN(msg.Text, " ", 3)
 	if len(args) < 3 {
 		reply(bot, msg, "Использование:\n/addfood <ккал> <описание>\nПример: /addfood 250 Яблоко")
@@ -55,9 +53,8 @@ func CheckFoodHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u User) {
 		total += kcal
 	}
 
-	// если в базе calories_goal == 0 пересчитать
 	if u.CaloriesGoal == 0 {
-		u.CaloriesGoal = CalcDailyCalories(u)
+		u.CaloriesGoal = 1000
 		_, _ = DB.Exec("UPDATE users SET calories_goal = ? WHERE id = ?", u.CaloriesGoal, u.ID)
 	}
 

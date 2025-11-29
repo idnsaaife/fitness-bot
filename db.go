@@ -20,7 +20,6 @@ func InitDB() {
 	// enable foreign keys
 	DB.Exec("PRAGMA foreign_keys = ON;")
 
-	// Создаем/обновляем таблицы, добавляем новые поля если нужно (упрощённо)
 	_, err = DB.Exec(`
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,7 +69,7 @@ func InitDB() {
 		log.Fatal(err)
 	}
 
-	// При старте можем прочитать всех, у кого настроены напоминания и запустить их
+	
 	go StartWaterRemindersOnBoot()
 }
 
@@ -101,10 +100,9 @@ func GetUserByTelegramID(tgID int64) (User, error) {
 			
 	if err != nil {
 		if err == sql.ErrNoRows {
-			// Пользователь не найден - это нормальная ситуация
+			
 			return User{}, nil
 		}
-		// Другие ошибки базы данных
 		return User{}, err
 	}
 	

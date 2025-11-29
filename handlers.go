@@ -10,8 +10,8 @@ func HandleMessage(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	text := msg.Text
 	user, err := GetUserByTelegramID(msg.From.ID)
 	
-	if HandleRegistration(bot, msg) {
-		return
+	if HandleRegistration(bot, msg) { 
+		return 
 	}
 	
 	if err != nil || user.ID == 0 {

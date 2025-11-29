@@ -30,6 +30,6 @@ type User struct {
 	Goal          Goal
 	ActivityLevel ActivityLevel
 
-	WaterIntervalMinutes int       // 0 = выключено, 60, 120, 240
+	WaterIntervalMinutes int       // 0 = выключено, 30, 60, 120
 	RegisteredAt         time.Time
 }

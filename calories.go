@@ -6,7 +6,7 @@ import (
 
 // Mifflin-St Jeor formula
 func CalculateBMR(weightKg float64, heightCm int, age int, male bool) float64 {
-	// BMR = 10W + 6.25H - 5A + 5 (male) / -161 (female)
+	// BMR = 10W + 6.25H - 5A  -161 (female) / + 5 (male) 
 	
 	return 10*weightKg + 6.25*float64(heightCm) - 5*float64(age) - 161
 }

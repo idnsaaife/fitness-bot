@@ -8,18 +8,15 @@ import (
 )
 
 func StatsHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u User) {
-	// изменение веса за период использования и количество тренировок за последний месяц
 	var firstWeight float64
 	var lastWeight float64
 
-	// первый лог
 	row := DB.QueryRow("SELECT weight FROM weight_logs WHERE user_id = ? ORDER BY created_at ASC LIMIT 1", u.ID)
 	row.Scan(&firstWeight)
-	// последний лог
+
 	row = DB.QueryRow("SELECT weight FROM weight_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 1", u.ID)
 	row.Scan(&lastWeight)
 
-	// тренировки за последний месяц
 	monthAgo := time.Now().AddDate(0, -1, 0).Format("2006-01-02 15:04:05")
 	row2, _ := DB.Query("SELECT COUNT(*) FROM activities WHERE user_id = ? AND created_at >= ?", u.ID, monthAgo)
 	var count int

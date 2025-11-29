@@ -15,7 +15,6 @@ func main() {
 
 	bot.Debug = false
 	log.Println("Bot started")
-
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 30
 	StartWaterReminders(bot)

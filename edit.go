@@ -63,7 +63,6 @@ func EditHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u User) {
 		return
 	}
 
-	// пересчитать дневную норму
 	u.HeightCm = height
 	u.WeightKg = weight
 	u.Age = age

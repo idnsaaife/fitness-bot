@@ -30,6 +30,5 @@ func AddActivityHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u User) {
 	}
 
 	_, _ = DB.Exec("UPDATE users SET calories_today = calories_today - ? WHERE id = ?", cal, u.ID)
-
 	reply(bot, msg, fmt.Sprintf("Занятие: %s, %d минут — ~%d ккал сожжено", atype, mins, cal))
 }

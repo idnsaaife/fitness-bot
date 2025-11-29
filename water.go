@@ -24,14 +24,14 @@ func WaterCommandHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u User) {
 		reply(bot, msg, "Неверный аргумент. Разрешены: 1,2,4 или off")
 		return
 	}
-	mins := hours * 60
+	mins := hours * 20
 	_, _ = DB.Exec("UPDATE users SET water_interval_minutes = ? WHERE id = ?", mins, u.ID)
 	reply(bot, msg, fmt.Sprintf("Напоминания установлены каждые %d часов.", hours))
 
 	StartWaterReminderForUser(bot, u.TgID, mins)
 }
 
-var waterReminders = map[int64]chan bool{} // tgID -> stop channel
+var waterReminders = map[int64]chan bool{} 
 
 func StartWaterRemindersOnBoot() {
 	rows, err := DB.Query("SELECT tg_id, water_interval_minutes FROM users WHERE water_interval_minutes > 0")
