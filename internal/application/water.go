@@ -1,0 +1,91 @@
+package application
+
+import (
+	"fitness-bot/internal/adapter"
+	"fitness-bot/internal/adapter/repositories"
+	"fitness-bot/internal/domain"
+	"fmt"
+	"log"
+	"strconv"
+	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
+
+func WaterHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User) {
+	text := `💧 *Управление водой*
+
+• Нажмите на кнопку чтобы добавить воду
+• Установите напоминания`
+
+	msgOut := tgbotapi.NewMessage(msg.Chat.ID, text)
+	msgOut.ReplyMarkup = adapter.WaterInlineKeyboard()
+	msgOut.ParseMode = "Markdown"
+	bot.Send(msgOut)
+}
+
+// func no usage
+func WaterCommandHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User, args []string) {
+	if len(args) < 2 {
+		WaterHandler(bot, msg, u)
+		return
+	}
+	if args[1] == "off" {
+		//_, _ = adapter.DB.Exec("UPDATE users SET water_interval_minutes = 0 WHERE id = ?", u.ID)
+		Reply(bot, msg, "Напоминания о воде отключены.")
+		return
+	}
+	hours, err := strconv.Atoi(args[1])
+	if err != nil || !(hours == 1 || hours == 2 || hours == 4) {
+		Reply(bot, msg, "Неверный аргумент. Разрешены: 1,2,4 или off")
+		return
+	}
+	mins := hours * 60
+	//_, _ = adapter.DB.Exec("UPDATE users SET water_interval_minutes = ? WHERE id = ?", mins, u.ID)
+	Reply(bot, msg, fmt.Sprintf("Напоминания установлены каждые %d часов.", hours))
+
+	StartWaterReminderForUser(bot, u.TgID, mins)
+}
+
+var waterReminders = map[int64]chan bool{}
+
+func StartWaterReminders(bot *tgbotapi.BotAPI, uRepo *repositories.UserRepo) {
+	rows, err := uRepo.GetQueryWaterReminders(bot)
+	if err != nil {
+		log.Println(err)
+	}
+	//если что убрать дефер
+	defer rows.Close()
+
+	for rows.Next() {
+		var tgID int64
+		var mins int
+		rows.Scan(&tgID, &mins)
+		StartWaterReminderForUser(bot, tgID, mins)
+	}
+}
+
+func StartWaterReminderForUser(bot *tgbotapi.BotAPI, tgID int64, mins int) {
+
+	if ch, ok := waterReminders[tgID]; ok {
+		ch <- true
+		delete(waterReminders, tgID)
+	}
+
+	stop := make(chan bool)
+	waterReminders[tgID] = stop
+
+	go func() {
+		ticker := time.NewTicker(time.Duration(mins) * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				msg := tgbotapi.NewMessage(tgID, "⏰ Пора выпить воды! 💧 Отметь сколько мл с помощью /water 250")
+				bot.Send(msg)
+			case <-stop:
+				return
+			}
+		}
+	}()
+}

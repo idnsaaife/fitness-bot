@@ -1,0 +1,44 @@
+package application
+
+import (
+	"fitness-bot/internal/adapter/repositories"
+	"fitness-bot/internal/domain"
+	"fmt"
+	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
+
+func StatsHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User,
+	weightRepo *repositories.WeightChangesRepo, actRepo *repositories.ActivityRepo) {
+	var firstWeight float64
+	var lastWeight float64
+
+	row := weightRepo.SelectWeightAsc(u.ID)
+	//row := adapter.DB.QueryRow("SELECT weight FROM weight_logs WHERE user_id = ? ORDER BY created_at ASC LIMIT 1", u.ID)
+	row.Scan(&firstWeight)
+
+	row = weightRepo.SelectWeightDesc(u.ID)
+	//row = adapter.DB.QueryRow("SELECT weight FROM weight_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 1", u.ID)
+	row.Scan(&lastWeight)
+
+	monthAgo := time.Now().AddDate(0, -1, 0).Format("2006-01-02 15:04:05")
+	row2 := actRepo.CalculateCountActivitiesFromMonth(u.ID, monthAgo)
+	//row2, _ := adapter.DB.Query("SELECT COUNT(*) FROM activities WHERE user_id = ? AND created_at >= ?", u.ID, monthAgo)
+	var count int
+	if row2 != nil {
+		row2.Next()
+		row2.Scan(&count)
+		row2.Close()
+	}
+
+	text := "📊 Статистика:\n"
+	if firstWeight == 0 {
+		text += fmt.Sprintf("Вес: сейчас %.1f кг\n", u.WeightKg)
+	} else {
+		text += fmt.Sprintf("Вес: %.1f кг (первый) → %.1f кг (последний)\n", firstWeight, lastWeight)
+	}
+	text += fmt.Sprintf("Тренировок за последний месяц: %d\n", count)
+
+	Reply(bot, msg, text)
+}
