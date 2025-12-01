@@ -2,7 +2,13 @@ package adapter
 
 import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-func MainMenuKeyboard() tgbotapi.ReplyKeyboardMarkup {
+type KeyboardHandler struct{}
+
+func NewKeyboardHandler() *KeyboardHandler {
+	return &KeyboardHandler{}
+}
+
+func (KeyboardHandler) MainMenuKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	return tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("📊 Статистика"),
@@ -20,7 +26,7 @@ func MainMenuKeyboard() tgbotapi.ReplyKeyboardMarkup {
 }
 
 // Минимальная клавиатура (только старт)
-func StartKeyboard() tgbotapi.ReplyKeyboardMarkup {
+func (KeyboardHandler) StartKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	return tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("/start"),
@@ -28,7 +34,7 @@ func StartKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	)
 }
 
-func WaterInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
+func (KeyboardHandler) WaterInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("💧 250 мл", "water:250"),
@@ -45,7 +51,7 @@ func WaterInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
 	)
 }
 
-func ActivityInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
+func (KeyboardHandler) ActivityInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🏃 Бег", "activity:run"),
@@ -62,23 +68,24 @@ func ActivityInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
 	)
 }
 
-func QuickFoodInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
-	return tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🍎 Яблоко (52 ккал)", "food:apple"),
-			tgbotapi.NewInlineKeyboardButtonData("🍌 Банан (89 ккал)", "food:banana"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🥪 Сэндвич (300 ккал)", "food:sandwich"),
-			tgbotapi.NewInlineKeyboardButtonData("🍚 Рис (130 ккал)", "food:rice"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("➕ Своя еда", "food:custom"),
-		),
-	)
-}
+//func no usage
+//func QuickFoodInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
+//	return tgbotapi.NewInlineKeyboardMarkup(
+//		tgbotapi.NewInlineKeyboardRow(
+//			tgbotapi.NewInlineKeyboardButtonData("🍎 Яблоко (52 ккал)", "food:apple"),
+//			tgbotapi.NewInlineKeyboardButtonData("🍌 Банан (89 ккал)", "food:banana"),
+//		),
+//		tgbotapi.NewInlineKeyboardRow(
+//			tgbotapi.NewInlineKeyboardButtonData("🥪 Сэндвич (300 ккал)", "food:sandwich"),
+//			tgbotapi.NewInlineKeyboardButtonData("🍚 Рис (130 ккал)", "food:rice"),
+//		),
+//		tgbotapi.NewInlineKeyboardRow(
+//			tgbotapi.NewInlineKeyboardButtonData("➕ Своя еда", "food:custom"),
+//		),
+//	)
+//}
 
-func GoalButtons() tgbotapi.InlineKeyboardMarkup {
+func (KeyboardHandler) GoalButtons() tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Похудеть", "goal:lose"),
@@ -92,7 +99,7 @@ func GoalButtons() tgbotapi.InlineKeyboardMarkup {
 	)
 }
 
-func ActivityButtons() tgbotapi.InlineKeyboardMarkup {
+func (KeyboardHandler) ActivityButtons() tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Низкая", "activity:low"),

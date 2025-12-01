@@ -27,27 +27,36 @@ func main() {
 
 	tgBot := adapter.NewBotApi()
 
+	appHandler := application.NewAppHandler(tgBot.BotApi)
+
+	foodHandler := application.NewFoodHandler(tgBot.BotApi)
+	actHandler := application.NewActHandler(tgBot.BotApi)
+	waterHandler := application.NewWaterHandler(tgBot.BotApi)
+
 	tgBot.BotApi.Debug = false
 	log.Println("Bot started")
 
 	//wNot := repositories.NewWaterNotificationRepo(db.SQL)
 
-	application.StartWaterReminders(tgBot.BotApi, userRepo)
+	waterHandler.StartWaterReminders(tgBot.BotApi, userRepo)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 30
 	updates := tgBot.BotApi.GetUpdatesChan(u)
 
+	callbackHandler := application.NewCallbackHandler(tgBot.BotApi)
+
 	for upd := range updates {
 		if upd.Message != nil {
 			go func() {
-				application.HandleMessage(tgBot.BotApi, upd.Message, actRepo, userRepo, mealRepo, weightRepo)
+				appHandler.HandleMessage(tgBot.BotApi, upd.Message, actRepo, userRepo,
+					mealRepo, weightRepo, foodHandler, actHandler, waterHandler)
 			}()
 		}
 
 		if upd.CallbackQuery != nil {
 			go func() {
-				application.HandleCallback(tgBot.BotApi, upd.CallbackQuery, userRepo)
+				callbackHandler.HandleCallback(tgBot.BotApi, upd.CallbackQuery, userRepo, waterHandler, actHandler, appHandler)
 			}()
 		}
 	}

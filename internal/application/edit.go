@@ -10,26 +10,27 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func EditHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User, uRepo *repositories.UserRepo) {
+func (appHandler *AppHandler) EditHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User,
+	uRepo *repositories.UserRepo, actHandler *ActHandler) {
 	args := strings.Fields(msg.Text)
 	if len(args) < 6 {
-		Reply(bot, msg, "Использование:\n/edit <рост_cm> <вес_kg> <возраст> <цель> <подвижность>\nЦель: похудеть|набрать|оставить\nПодвижность: низкая|средняя|приемлемая|высокая\nПример: /edit 170 65 28 похудеть средняя")
+		appHandler.Reply(bot, msg, "Использование:\n/edit <рост_cm> <вес_kg> <возраст> <цель> <подвижность>\nЦель: похудеть|набрать|оставить\nПодвижность: низкая|средняя|приемлемая|высокая\nПример: /edit 170 65 28 похудеть средняя")
 		return
 	}
 
 	height, err := strconv.Atoi(args[1])
 	if err != nil {
-		Reply(bot, msg, "Неверный рост")
+		appHandler.Reply(bot, msg, "Неверный рост")
 		return
 	}
 	weight, err := strconv.ParseFloat(args[2], 64)
 	if err != nil {
-		Reply(bot, msg, "Неверный вес")
+		appHandler.Reply(bot, msg, "Неверный вес")
 		return
 	}
 	age, err := strconv.Atoi(args[3])
 	if err != nil {
-		Reply(bot, msg, "Неверный возраст")
+		appHandler.Reply(bot, msg, "Неверный возраст")
 		return
 	}
 
@@ -62,7 +63,7 @@ func EditHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User, uRe
 	err = uRepo.UpdateUserParams(height, weight, age, string(goal), string(act), u.ID)
 	//_, err = uRepo.Db.Exec("UPDATE users SET height_cm = ?, weight_kg = ?, age = ?, goal = ?, activity_level = ? WHERE id = ?", height, weight, age, string(goal), string(act), u.ID)
 	if err != nil {
-		Reply(bot, msg, "Ошибка обновления данных")
+		appHandler.Reply(bot, msg, "Ошибка обновления данных")
 		return
 	}
 
@@ -72,10 +73,10 @@ func EditHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User, uRe
 	u.Goal = goal
 	u.ActivityLevel = act
 
-	newCal := CalcDailyCalories(u)
+	newCal := actHandler.CalcDailyCalories(u)
 
 	uRepo.UpdateGoalCalories(newCal, u.ID)
 	//_, _ = uRepo.Db.Exec("UPDATE users SET calories_goal = ? WHERE id = ?", newCal, u.ID)
 
-	Reply(bot, msg, fmt.Sprintf("Данные обновлены. Новая дневная норма: %d ккал", newCal))
+	appHandler.Reply(bot, msg, fmt.Sprintf("Данные обновлены. Новая дневная норма: %d ккал", newCal))
 }

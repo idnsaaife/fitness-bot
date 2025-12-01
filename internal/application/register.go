@@ -28,27 +28,27 @@ var (
 	regData   = map[int64]map[string]string{}
 )
 
-func StartHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, userRepo *repositories.UserRepo) {
+func (appHandler *AppHandler) StartHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, userRepo *repositories.UserRepo) {
 
 	u, error := userRepo.GetUserByTelegramID(msg.From.ID)
 
 	if error != nil {
 		str := error.Error()
-		Reply(bot, msg, str)
+		appHandler.Reply(bot, msg, str)
 		return
 	}
 	if u.ID != 0 {
-		Reply(bot, msg, "Вы уже зарегистрированы! Для изменения данных используйте /edit")
+		appHandler.Reply(bot, msg, "Вы уже зарегистрированы! Для изменения данных используйте /edit")
 		return
 	}
 
 	regStates[msg.Chat.ID] = RegHeight
 	regData[msg.Chat.ID] = map[string]string{}
 
-	Reply(bot, msg, "Добро пожаловать! 🎉\nНачнём регистрацию.\nВведите ваш рост в сантиметрах:")
+	appHandler.Reply(bot, msg, "Добро пожаловать! 🎉\nНачнём регистрацию.\nВведите ваш рост в сантиметрах:")
 }
 
-func HandleRegistration(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) bool {
+func (appHandler *AppHandler) HandleRegistration(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) bool {
 	state, ok := regStates[msg.Chat.ID]
 	if !ok || state == RegNone {
 		return false
@@ -61,36 +61,37 @@ func HandleRegistration(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) bool {
 	case RegHeight:
 		val, err := strconv.Atoi(text)
 		if err != nil || val < 120 || val > 250 {
-			Reply(bot, msg, "Введите корректный рост в сантиметрах, например 170:")
+			appHandler.Reply(bot, msg, "Введите корректный рост в сантиметрах, например 170:")
 			return true
 		}
 		regData[msg.Chat.ID]["height"] = text
 		regStates[msg.Chat.ID] = RegWeight
-		Reply(bot, msg, "Введите ваш вес (в кг), например 65.5:")
+		appHandler.Reply(bot, msg, "Введите ваш вес (в кг), например 65.5:")
 		return true
 
 	case RegWeight:
 		val, err := strconv.ParseFloat(text, 64)
 		if err != nil || val < 30 || val > 300 {
-			Reply(bot, msg, "Введите корректный вес в кг, например 65.5:")
+			appHandler.Reply(bot, msg, "Введите корректный вес в кг, например 65.5:")
 			return true
 		}
 		regData[msg.Chat.ID]["weight"] = text
 		regStates[msg.Chat.ID] = RegAge
-		Reply(bot, msg, "Введите ваш возраст:")
+		appHandler.Reply(bot, msg, "Введите ваш возраст:")
 		return true
 
 	case RegAge:
+		keyboardHandler := adapter.NewKeyboardHandler()
 		val, err := strconv.Atoi(text)
 		if err != nil || val < 10 || val > 100 {
-			Reply(bot, msg, "Введите корректный возраст, например 25:")
+			appHandler.Reply(bot, msg, "Введите корректный возраст, например 25:")
 			return true
 		}
 		regData[msg.Chat.ID]["age"] = text
 		regStates[msg.Chat.ID] = RegGoal
 
 		msgOut := tgbotapi.NewMessage(msg.Chat.ID, "Выберите вашу цель:")
-		msgOut.ReplyMarkup = adapter.GoalButtons()
+		msgOut.ReplyMarkup = keyboardHandler.GoalButtons()
 		bot.Send(msgOut)
 		return true
 
@@ -106,7 +107,8 @@ func HandleRegistration(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) bool {
 	return false
 }
 
-func FinalizeRegistration(bot *tgbotapi.BotAPI, tgID int64, userRepo *repositories.UserRepo) {
+func (appHandler *AppHandler) FinalizeRegistration(bot *tgbotapi.BotAPI, tgID int64, userRepo *repositories.UserRepo,
+	actHandler *ActHandler, callbackHandler *CallbackHandler) {
 	d := regData[tgID]
 
 	height, _ := strconv.Atoi(d["height"])
@@ -137,15 +139,15 @@ func FinalizeRegistration(bot *tgbotapi.BotAPI, tgID int64, userRepo *repositori
 
 	u, err := userRepo.CreateUser(tgID, height, weight, age, goal, act)
 	if err != nil {
-		Send(bot, tgID, "Произошла ошибка при регистрации. Попробуйте снова.")
+		callbackHandler.Send(bot, tgID, "Произошла ошибка при регистрации. Попробуйте снова.")
 		return
 	}
 
-	cal := CalcDailyCalories(u)
+	cal := actHandler.CalcDailyCalories(u)
 	userRepo.UpdateGoalCalories(cal, u.ID)
 	//adapter.DB.Exec("UPDATE users SET calories_goal = ? WHERE id = ?", cal, u.ID)
 
-	Send(bot, tgID, fmt.Sprintf(
+	callbackHandler.Send(bot, tgID, fmt.Sprintf(
 		"Регистрация завершена! 🎉\n\n"+
 			"Ваши параметры:\n"+
 			"• Рост: %d см\n"+
@@ -157,19 +159,20 @@ func FinalizeRegistration(bot *tgbotapi.BotAPI, tgID int64, userRepo *repositori
 		height, weight, age, d["goal"], d["activity"], cal,
 	))
 
-	ShowMainMenuAfterRegistration(bot, tgID)
+	appHandler.ShowMainMenuAfterRegistration(bot, tgID)
 
 	delete(regStates, tgID)
 	delete(regData, tgID)
 }
 
-func ShowMainMenuAfterRegistration(bot *tgbotapi.BotAPI, chatID int64) {
+func (appHandler *AppHandler) ShowMainMenuAfterRegistration(bot *tgbotapi.BotAPI, chatID int64) {
 	text := `🏠 *Главное меню*
 
 Выберите действие:`
 
+	keyboardHandler := adapter.NewKeyboardHandler()
 	msg := tgbotapi.NewMessage(chatID, text)
-	msg.ReplyMarkup = adapter.MainMenuKeyboard()
+	msg.ReplyMarkup = keyboardHandler.MainMenuKeyboard()
 	msg.ParseMode = "Markdown"
 	bot.Send(msg)
 }

@@ -9,7 +9,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func StatsHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User,
+func (appHandler *AppHandler) StatsHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User,
 	weightRepo *repositories.WeightChangesRepo, actRepo *repositories.ActivityRepo) {
 	var firstWeight float64
 	var lastWeight float64
@@ -40,5 +40,5 @@ func StatsHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User,
 	}
 	text += fmt.Sprintf("Тренировок за последний месяц: %d\n", count)
 
-	Reply(bot, msg, text)
+	appHandler.Reply(bot, msg, text)
 }

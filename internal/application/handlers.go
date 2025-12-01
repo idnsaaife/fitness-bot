@@ -9,82 +9,94 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func HandleMessage(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, actRepo *repositories.ActivityRepo,
-	userRepo *repositories.UserRepo, mealRepo *repositories.MealRepo, weightRepo *repositories.WeightChangesRepo) {
+type AppHandler struct {
+	bot *tgbotapi.BotAPI
+}
+
+func NewAppHandler(Bot *tgbotapi.BotAPI) *AppHandler {
+	return &AppHandler{bot: Bot}
+}
+
+func (appHandler *AppHandler) HandleMessage(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, actRepo *repositories.ActivityRepo,
+	userRepo *repositories.UserRepo, mealRepo *repositories.MealRepo,
+	weightRepo *repositories.WeightChangesRepo, foodHandler *FoodHandler,
+	actHandler *ActHandler, waterHandler *WaterHandler) {
+	keyboardHandler := adapter.NewKeyboardHandler()
 	text := msg.Text
 
-	if isProcessing := HandleRegistration(bot, msg); isProcessing {
+	if isProcessing := appHandler.HandleRegistration(bot, msg); isProcessing {
 		return
 	}
 
 	if text == "/start" {
-		StartHandler(bot, msg, userRepo)
+		appHandler.StartHandler(bot, msg, userRepo)
 		return
 	}
 
 	user, err := userRepo.GetUserByTelegramID(msg.From.ID)
 	if err != nil {
-		Reply(bot, msg, "Ошибка базы данных. Попробуйте позже.")
+		appHandler.Reply(bot, msg, "Ошибка базы данных. Попробуйте позже.")
 		return
 	}
 
 	if user.ID == 0 {
 		msg := tgbotapi.NewMessage(msg.Chat.ID, "Вы не зарегистрированы. Нажмите кнопку ниже для начала:")
-		msg.ReplyMarkup = adapter.StartKeyboard()
+		msg.ReplyMarkup = keyboardHandler.StartKeyboard()
 		bot.Send(msg)
 		return
 	}
 
-	if IsAddingActivity(msg.Chat.ID) {
-		HandleActivityDuration(bot, msg, user, actRepo, userRepo)
+	if actHandler.IsAddingActivity(msg.Chat.ID) {
+		actHandler.HandleActivityDuration(bot, msg, user, actRepo, userRepo, appHandler)
 		return
 	}
 
-	if IsAddingFood(msg.Chat.ID) {
-		HandleFoodInput(bot, msg, user, mealRepo, userRepo)
+	if foodHandler.IsAddingFood(msg.Chat.ID) {
+		foodHandler.HandleFoodInput(bot, msg, user, mealRepo, userRepo, appHandler)
 		return
 	}
 
 	switch {
 	case text == "/start" || text == "🏠 Главное меню":
-		ShowMainMenu(bot, msg, user)
+		appHandler.ShowMainMenu(bot, msg, user)
 
 	case text == "📊 Статистика" || strings.HasPrefix(text, "/stats"):
-		StatsHandler(bot, msg, user, weightRepo, actRepo)
+		appHandler.StatsHandler(bot, msg, user, weightRepo, actRepo)
 
 	case text == "🍎 Добавить еду" || strings.HasPrefix(text, "/addfood"):
-		AddFoodHandler(bot, msg, user)
+		foodHandler.AddFoodHandler(bot, msg, user)
 
 	case text == "💧 Вода" || strings.HasPrefix(text, "/water"):
-		WaterHandler(bot, msg, user)
+		waterHandler.HandlerWater(bot, msg, user)
 
 	case text == "🏃 Активность" || strings.HasPrefix(text, "/addactivity"):
-		ActivityHandler(bot, msg, user)
+		actHandler.ActivityHandler(bot, msg, user)
 
 	case text == "✏️ Редактировать данные" || strings.HasPrefix(text, "/edit"):
-		EditHandler(bot, msg, user, userRepo)
+		appHandler.EditHandler(bot, msg, user, userRepo, actHandler)
 
 	case text == "📋 Проверить питание" || strings.HasPrefix(text, "/checkfood"):
-		CheckFoodHandler(bot, msg, user, userRepo, mealRepo)
+		foodHandler.CheckFoodHandler(bot, msg, user, userRepo, mealRepo, appHandler)
 
 	default:
-		Reply(bot, msg, "Не понял команду. Используйте кнопки меню:")
-		ShowMainMenu(bot, msg, user)
+		appHandler.Reply(bot, msg, "Не понял команду. Используйте кнопки меню:")
+		appHandler.ShowMainMenu(bot, msg, user)
 	}
 }
 
-func ShowMainMenu(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User) {
+func (appHandler *AppHandler) ShowMainMenu(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User) {
 	text := `🏠 *Главное меню*
 
 Выберите действие:`
 
+	keyboardHandler := adapter.NewKeyboardHandler()
 	msgOut := tgbotapi.NewMessage(msg.Chat.ID, text)
-	msgOut.ReplyMarkup = adapter.MainMenuKeyboard()
+	msgOut.ReplyMarkup = keyboardHandler.MainMenuKeyboard()
 	msgOut.ParseMode = "Markdown"
 	bot.Send(msgOut)
 }
 
-func Reply(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, text string) {
+func (appHandler *AppHandler) Reply(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, text string) {
 	message := tgbotapi.NewMessage(msg.Chat.ID, text)
 	bot.Send(message)
 }

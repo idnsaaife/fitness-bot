@@ -6,7 +6,7 @@ import (
 )
 
 // Mifflin-St Jeor formula
-func CalculateBMR(weightKg float64, heightCm int, age int, male bool) float64 {
+func (actHandler *ActHandler) CalculateBMR(weightKg float64, heightCm int, age int, male bool) float64 {
 	// BMR = 10W + 6.25H - 5A  -161 (female) / + 5 (male)
 	if male {
 		return 10*weightKg + 6.25*float64(heightCm) - 5*float64(age) + 5
@@ -14,7 +14,7 @@ func CalculateBMR(weightKg float64, heightCm int, age int, male bool) float64 {
 	return 10*weightKg + 6.25*float64(heightCm) - 5*float64(age) - 161
 }
 
-func ActivityFactor(level domain.ActivityLevel) float64 {
+func (actHandler *ActHandler) ActivityFactor(level domain.ActivityLevel) float64 {
 	switch level {
 	case domain.ActivityLow:
 		return 1.2
@@ -29,7 +29,7 @@ func ActivityFactor(level domain.ActivityLevel) float64 {
 	}
 }
 
-func GoalAdjustment(goal domain.Goal) float64 {
+func (actHandler *ActHandler) GoalAdjustment(goal domain.Goal) float64 {
 	switch goal {
 	case domain.GoalLose:
 		return -500.0 // дефицит в ккал/день
@@ -41,24 +41,24 @@ func GoalAdjustment(goal domain.Goal) float64 {
 }
 
 // Рассчитать дневную норму калорий для пользователя
-func CalcDailyCalories(u domain.User) int {
-	bmr := CalculateBMR(u.WeightKg, u.HeightCm, u.Age, true)
-	af := ActivityFactor(u.ActivityLevel)
-	goalAdj := GoalAdjustment(u.Goal)
+func (actHandler *ActHandler) CalcDailyCalories(u domain.User) int {
+	bmr := actHandler.CalculateBMR(u.WeightKg, u.HeightCm, u.Age, true)
+	af := actHandler.ActivityFactor(u.ActivityLevel)
+	goalAdj := actHandler.GoalAdjustment(u.Goal)
 	cal := bmr*af + goalAdj
 	return int(math.Round(cal))
 }
 
 // Подсчёт сожжённых калорий по активности:
 // calories = MET * weight_kg * hours
-func CaloriesForActivity(activity string, durationMinutes int, weightKg float64) int {
-	met := METForActivity(activity)
+func (actHandler *ActHandler) CaloriesForActivity(activity string, durationMinutes int, weightKg float64) int {
+	met := actHandler.METForActivity(activity)
 	hours := float64(durationMinutes) / 60.0
 	cal := met * weightKg * hours
 	return int(math.Round(cal))
 }
 
-func METForActivity(activity string) float64 {
+func (actHandler *ActHandler) METForActivity(activity string) float64 {
 	switch activity {
 	case "бег", "run", "running":
 		return 8.0
