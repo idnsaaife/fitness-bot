@@ -72,9 +72,9 @@ func (actHandler *ActHandler) HandleActivityDuration(bot *tgbotapi.BotAPI, msg *
 		return
 	}
 
-	calories := actHandler.CaloriesForActivity(activityType, duration, u.WeightKg)
+	calories := actHandler.CaloriesForActivity(activityType, duration, *u.GetWeightKg())
 
-	err = actRepo.InsertActivityInBase(u.ID, activityType, duration, calories)
+	err = actRepo.InsertActivityInBase(*u.GetId(), activityType, duration, calories)
 	//Create func for db actions
 	//_, err = adapter.DB.Exec("INSERT INTO activities (user_id, atype, duration_min, calories) VALUES (?, ?, ?, ?)",
 	//	u.ID, activityType, duration, calories)
@@ -84,7 +84,7 @@ func (actHandler *ActHandler) HandleActivityDuration(bot *tgbotapi.BotAPI, msg *
 		return
 	}
 
-	userRepo.UpdateTodayCalories(calories, u.ID)
+	userRepo.UpdateTodayCalories(calories, *u.GetId())
 
 	//_, _ = adapter.DB.Exec("UPDATE users SET calories_today = calories_today - ? WHERE id = ?", calories, u.ID)
 

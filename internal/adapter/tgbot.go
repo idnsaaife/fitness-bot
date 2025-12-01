@@ -8,7 +8,11 @@ import (
 )
 
 type TgBot struct {
-	BotApi *tgbotapi.BotAPI
+	botApi *tgbotapi.BotAPI
+}
+
+func (tgBot *TgBot) GetTgBotApi() *tgbotapi.BotAPI {
+	return tgBot.botApi
 }
 
 func NewBotApi() *TgBot {
@@ -16,5 +20,5 @@ func NewBotApi() *TgBot {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &TgBot{BotApi: bot}
+	return &TgBot{botApi: bot}
 }

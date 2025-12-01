@@ -75,7 +75,7 @@ func (foodHandler *FoodHandler) HandleFoodInput(bot *tgbotapi.BotAPI, msg *tgbot
 
 		desc := text
 
-		err := mealRepo.SaveFoodWithCalories(u.ID, desc, kcal)
+		err := mealRepo.SaveFoodWithCalories(*u.GetId(), desc, kcal)
 		//_, err := adapter.DB.Exec("INSERT INTO meals (user_id, description, calories) VALUES (?, ?, ?)", u.ID, desc, kcal)
 		if err != nil {
 			appHandler.Reply(foodHandler.bot, msg, "Ошибка сохранения еды")
@@ -85,7 +85,7 @@ func (foodHandler *FoodHandler) HandleFoodInput(bot *tgbotapi.BotAPI, msg *tgbot
 			return
 		}
 
-		userRepo.UpdateCalories(kcal, u.ID)
+		userRepo.UpdateCalories(kcal, *u.GetId())
 		//_, _ = adapter.DB.Exec("UPDATE users SET calories_today = calories_today + ? WHERE id = ?", kcal, u.ID)
 
 		appHandler.Reply(foodHandler.bot, msg, fmt.Sprintf("✅ Добавлено: *%s* — *%d ккал*", desc, kcal))
@@ -132,7 +132,7 @@ func (foodHandler *FoodHandler) IsAddingFood(chatID int64) bool {
 func (foodHandler *FoodHandler) CheckFoodHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User,
 	userRepo *repositories.UserRepo, mealRepo *repositories.MealRepo, appHandler *AppHandler) {
 	startOfDay := time.Now().Format("2006-01-02") + " 00:00:00"
-	rows, err := mealRepo.GetAllFoodByDay(u.ID, startOfDay)
+	rows, err := mealRepo.GetAllFoodByDay(*u.GetId(), startOfDay)
 	//rows, err := adapter.DB.Query("SELECT description, calories, created_at FROM meals WHERE user_id = ? AND created_at >= ?", u.ID, startOfDay)
 	if err != nil {
 		appHandler.Reply(foodHandler.bot, msg, "Ошибка чтения базы")
@@ -151,17 +151,17 @@ func (foodHandler *FoodHandler) CheckFoodHandler(bot *tgbotapi.BotAPI, msg *tgbo
 		total += kcal
 	}
 
-	if u.CaloriesGoal == 0 {
-		u.CaloriesGoal = 1000
-		userRepo.UpdateGoalCalories(u.CaloriesGoal, u.ID)
+	if *u.GetCaloriesGoal() == 0 {
+		u.SetCaloriesGoal(1000)
+		userRepo.UpdateGoalCalories(*u.GetCaloriesGoal(), *u.GetId())
 		//_, _ = userRepo.Db.Exec("UPDATE users SET calories_goal = ? WHERE id = ?", u.CaloriesGoal, u.ID)
 	}
 
-	remaining := u.CaloriesGoal - total
+	remaining := *u.GetCaloriesGoal() - total
 	if remaining < 0 {
 		remaining = 0
 	}
 
-	text += fmt.Sprintf("\nВсего: %d ккал\nОсталось до дневной нормы (%d): %d ккал", total, u.CaloriesGoal, remaining)
+	text += fmt.Sprintf("\nВсего: %d ккал\nОсталось до дневной нормы (%d): %d ккал", total, *u.GetCaloriesGoal(), remaining)
 	appHandler.Reply(foodHandler.bot, msg, text)
 }

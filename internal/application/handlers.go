@@ -41,7 +41,7 @@ func (appHandler *AppHandler) HandleMessage(bot *tgbotapi.BotAPI, msg *tgbotapi.
 		return
 	}
 
-	if user.ID == 0 {
+	if *user.GetId() == 0 {
 		msg := tgbotapi.NewMessage(msg.Chat.ID, "Вы не зарегистрированы. Нажмите кнопку ниже для начала:")
 		msg.ReplyMarkup = keyboardHandler.StartKeyboard()
 		bot.Send(msg)
@@ -153,22 +153,22 @@ func (appHandler *AppHandler) EditHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 		act = domain.ActivityMedium
 	}
 
-	err = uRepo.UpdateUserParams(height, weight, age, string(goal), string(act), u.ID)
+	err = uRepo.UpdateUserParams(height, weight, age, string(goal), string(act), *u.GetId())
 	//_, err = uRepo.Db.Exec("UPDATE users SET height_cm = ?, weight_kg = ?, age = ?, goal = ?, activity_level = ? WHERE id = ?", height, weight, age, string(goal), string(act), u.ID)
 	if err != nil {
 		appHandler.Reply(bot, msg, "Ошибка обновления данных")
 		return
 	}
 
-	u.HeightCm = height
-	u.WeightKg = weight
-	u.Age = age
-	u.Goal = goal
-	u.ActivityLevel = act
+	u.SetHeightCm(height)
+	u.SetWeightKg(weight)
+	u.SetAge(age)
+	u.SetGoal(goal)
+	u.SetActivityLevel(act)
 
 	newCal := actHandler.CalcDailyCalories(u)
 
-	uRepo.UpdateGoalCalories(newCal, u.ID)
+	uRepo.UpdateGoalCalories(newCal, *u.GetId())
 	//_, _ = uRepo.Db.Exec("UPDATE users SET calories_goal = ? WHERE id = ?", newCal, u.ID)
 
 	appHandler.Reply(bot, msg, fmt.Sprintf("Данные обновлены. Новая дневная норма: %d ккал", newCal))

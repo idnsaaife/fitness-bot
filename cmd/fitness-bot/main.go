@@ -20,43 +20,43 @@ func main() {
 		log.Fatal(err)
 	}
 
-	actRepo := repositories.NewActivityRepo(db.SQL)
-	userRepo := repositories.NewUserRepo(db.SQL)
-	weightRepo := repositories.NewWeightChangesRepo(db.SQL)
-	mealRepo := repositories.NewMealRepo(db.SQL)
+	actRepo := repositories.NewActivityRepo(db.GetDB())
+	userRepo := repositories.NewUserRepo(db.GetDB())
+	weightRepo := repositories.NewWeightChangesRepo(db.GetDB())
+	mealRepo := repositories.NewMealRepo(db.GetDB())
 
 	tgBot := adapter.NewBotApi()
 
-	appHandler := application.NewAppHandler(tgBot.BotApi)
+	appHandler := application.NewAppHandler(tgBot.GetTgBotApi())
 
-	foodHandler := application.NewFoodHandler(tgBot.BotApi)
-	actHandler := application.NewActHandler(tgBot.BotApi)
-	waterHandler := application.NewWaterHandler(tgBot.BotApi)
+	foodHandler := application.NewFoodHandler(tgBot.GetTgBotApi())
+	actHandler := application.NewActHandler(tgBot.GetTgBotApi())
+	waterHandler := application.NewWaterHandler(tgBot.GetTgBotApi())
 
-	tgBot.BotApi.Debug = false
+	tgBot.GetTgBotApi().Debug = false
 	log.Println("Bot started")
 
 	//wNot := repositories.NewWaterNotificationRepo(db.SQL)
 
-	waterHandler.StartWaterReminders(tgBot.BotApi, userRepo)
+	waterHandler.StartWaterReminders(tgBot.GetTgBotApi(), userRepo)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 30
-	updates := tgBot.BotApi.GetUpdatesChan(u)
+	updates := tgBot.GetTgBotApi().GetUpdatesChan(u)
 
-	callbackHandler := application.NewCallbackHandler(tgBot.BotApi)
+	callbackHandler := application.NewCallbackHandler(tgBot.GetTgBotApi())
 
 	for upd := range updates {
 		if upd.Message != nil {
 			go func() {
-				appHandler.HandleMessage(tgBot.BotApi, upd.Message, actRepo, userRepo,
+				appHandler.HandleMessage(tgBot.GetTgBotApi(), upd.Message, actRepo, userRepo,
 					mealRepo, weightRepo, foodHandler, actHandler, waterHandler)
 			}()
 		}
 
 		if upd.CallbackQuery != nil {
 			go func() {
-				callbackHandler.HandleCallback(tgBot.BotApi, upd.CallbackQuery, userRepo, waterHandler, actHandler, appHandler)
+				callbackHandler.HandleCallback(tgBot.GetTgBotApi(), upd.CallbackQuery, userRepo, waterHandler, actHandler, appHandler)
 			}()
 		}
 	}

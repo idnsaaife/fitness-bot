@@ -30,14 +30,14 @@ var (
 
 func (appHandler *AppHandler) StartHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, userRepo *repositories.UserRepo) {
 
-	u, error := userRepo.GetUserByTelegramID(msg.From.ID)
+	u, err := userRepo.GetUserByTelegramID(msg.From.ID)
 
-	if error != nil {
-		str := error.Error()
+	if err != nil {
+		str := err.Error()
 		appHandler.Reply(bot, msg, str)
 		return
 	}
-	if u.ID != 0 {
+	if *u.GetId() != 0 {
 		appHandler.Reply(bot, msg, "Вы уже зарегистрированы! Для изменения данных используйте /edit")
 		return
 	}
@@ -144,7 +144,7 @@ func (appHandler *AppHandler) FinalizeRegistration(bot *tgbotapi.BotAPI, tgID in
 	}
 
 	cal := actHandler.CalcDailyCalories(u)
-	userRepo.UpdateGoalCalories(cal, u.ID)
+	userRepo.UpdateGoalCalories(cal, *u.GetId())
 	//adapter.DB.Exec("UPDATE users SET calories_goal = ? WHERE id = ?", cal, u.ID)
 
 	callbackHandler.Send(bot, tgID, fmt.Sprintf(

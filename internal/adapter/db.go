@@ -8,7 +8,11 @@ import (
 )
 
 type DB struct {
-	SQL *sql.DB
+	sql *sql.DB
+}
+
+func (db *DB) GetDB() *sql.DB {
+	return db.sql
 }
 
 //var DB *sql.DB
@@ -72,7 +76,7 @@ func InitDB() (*DB, error) {
 		log.Fatal(err)
 	}
 
-	wrapper := &DB{SQL: db}
+	wrapper := &DB{sql: db}
 	go func() {
 		wrapper.StartWaterRemindersOnBoot()
 	}()
@@ -120,7 +124,7 @@ func InitDB() (*DB, error) {
 //}
 
 func (db *DB) StartWaterRemindersOnBoot() {
-	rows, err := db.SQL.Query("SELECT tg_id, water_interval_minutes FROM users WHERE water_interval_minutes > 0")
+	rows, err := db.sql.Query("SELECT tg_id, water_interval_minutes FROM users WHERE water_interval_minutes > 0")
 	if err != nil {
 		return
 	}

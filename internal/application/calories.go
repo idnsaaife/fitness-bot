@@ -42,9 +42,9 @@ func (actHandler *ActHandler) GoalAdjustment(goal domain.Goal) float64 {
 
 // Рассчитать дневную норму калорий для пользователя
 func (actHandler *ActHandler) CalcDailyCalories(u domain.User) int {
-	bmr := actHandler.CalculateBMR(u.WeightKg, u.HeightCm, u.Age, true)
-	af := actHandler.ActivityFactor(u.ActivityLevel)
-	goalAdj := actHandler.GoalAdjustment(u.Goal)
+	bmr := actHandler.CalculateBMR(*u.GetWeightKg(), *u.GetHeightCm(), *u.GetAge(), true)
+	af := actHandler.ActivityFactor(*u.GetActivityLevel())
+	goalAdj := actHandler.GoalAdjustment(*u.GetGoal())
 	cal := bmr*af + goalAdj
 	return int(math.Round(cal))
 }
