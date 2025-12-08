@@ -49,44 +49,44 @@ func (appHandler *AppHandler) HandleMessage(bot *tgbotapi.BotAPI, msg *tgbotapi.
 	}
 
 	if actHandler.IsAddingActivity(msg.Chat.ID) {
-		actHandler.HandleActivityDuration(bot, msg, user, actRepo, userRepo, appHandler)
+		actHandler.HandleActivityDuration(msg, user, actRepo, userRepo, appHandler)
 		return
 	}
 
 	if foodHandler.IsAddingFood(msg.Chat.ID) {
-		foodHandler.HandleFoodInput(bot, msg, user, mealRepo, userRepo, appHandler)
+		foodHandler.HandleFoodInput(msg, user, mealRepo, userRepo, appHandler)
 		return
 	}
 
 	switch {
 	case text == "/start" || text == "🏠 Главное меню":
-		appHandler.ShowMainMenu(bot, msg, user)
+		appHandler.ShowMainMenu(bot, msg)
 
 	case text == "📊 Статистика" || strings.HasPrefix(text, "/stats"):
 		appHandler.StatsHandler(bot, msg, user, weightRepo, actRepo)
 
 	case text == "🍎 Добавить еду" || strings.HasPrefix(text, "/addfood"):
-		foodHandler.AddFoodHandler(bot, msg, user)
+		foodHandler.AddFoodHandler(msg)
 
 	case text == "💧 Вода" || strings.HasPrefix(text, "/water"):
-		waterHandler.HandlerWater(bot, msg, user)
+		waterHandler.HandlerWater(msg)
 
 	case text == "🏃 Активность" || strings.HasPrefix(text, "/addactivity"):
-		actHandler.ActivityHandler(bot, msg, user)
+		actHandler.ActivityHandler(msg)
 
 	case text == "✏️ Редактировать данные" || strings.HasPrefix(text, "/edit"):
 		appHandler.EditHandler(bot, msg, user, userRepo, actHandler)
 
 	case text == "📋 Проверить питание" || strings.HasPrefix(text, "/checkfood"):
-		foodHandler.CheckFoodHandler(bot, msg, user, userRepo, mealRepo, appHandler)
+		foodHandler.CheckFoodHandler(msg, user, userRepo, mealRepo, appHandler)
 
 	default:
 		appHandler.Reply(bot, msg, "Не понял команду. Используйте кнопки меню:")
-		appHandler.ShowMainMenu(bot, msg, user)
+		appHandler.ShowMainMenu(bot, msg)
 	}
 }
 
-func (appHandler *AppHandler) ShowMainMenu(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User) {
+func (appHandler *AppHandler) ShowMainMenu(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	text := `🏠 *Главное меню*
 
 Выберите действие:`
@@ -154,7 +154,6 @@ func (appHandler *AppHandler) EditHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	}
 
 	err = uRepo.UpdateUserParams(height, weight, age, string(goal), string(act), *u.GetId())
-	//_, err = uRepo.Db.Exec("UPDATE users SET height_cm = ?, weight_kg = ?, age = ?, goal = ?, activity_level = ? WHERE id = ?", height, weight, age, string(goal), string(act), u.ID)
 	if err != nil {
 		appHandler.Reply(bot, msg, "Ошибка обновления данных")
 		return
@@ -169,7 +168,6 @@ func (appHandler *AppHandler) EditHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	newCal := actHandler.CalcDailyCalories(u)
 
 	uRepo.UpdateGoalCalories(newCal, *u.GetId())
-	//_, _ = uRepo.Db.Exec("UPDATE users SET calories_goal = ? WHERE id = ?", newCal, u.ID)
 
 	appHandler.Reply(bot, msg, fmt.Sprintf("Данные обновлены. Новая дневная норма: %d ккал", newCal))
 }

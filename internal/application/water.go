@@ -3,7 +3,6 @@ package application
 import (
 	"fitness-bot/internal/adapter"
 	"fitness-bot/internal/adapter/repositories"
-	"fitness-bot/internal/domain"
 	"log"
 	"time"
 
@@ -18,7 +17,7 @@ func NewWaterHandler(Bot *tgbotapi.BotAPI) *WaterHandler {
 	return &WaterHandler{bot: Bot}
 }
 
-func (waterHandler *WaterHandler) HandlerWater(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User) {
+func (waterHandler *WaterHandler) HandlerWater(msg *tgbotapi.Message) {
 	text := `💧 *Управление водой*
 
 • Нажмите на кнопку чтобы добавить воду
@@ -31,32 +30,9 @@ func (waterHandler *WaterHandler) HandlerWater(bot *tgbotapi.BotAPI, msg *tgbota
 	waterHandler.bot.Send(msgOut)
 }
 
-// func no usage
-//func WaterCommandHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User, args []string) {
-//	if len(args) < 2 {
-//		HandlerWater(bot, msg, u)
-//		return
-//	}
-//	if args[1] == "off" {
-//		//_, _ = adapter.DB.Exec("UPDATE users SET water_interval_minutes = 0 WHERE id = ?", u.ID)
-//		Reply(bot, msg, "Напоминания о воде отключены.")
-//		return
-//	}
-//	hours, err := strconv.Atoi(args[1])
-//	if err != nil || !(hours == 1 || hours == 2 || hours == 4) {
-//		Reply(bot, msg, "Неверный аргумент. Разрешены: 1,2,4 или off")
-//		return
-//	}
-//	mins := hours * 60
-//	//_, _ = adapter.DB.Exec("UPDATE users SET water_interval_minutes = ? WHERE id = ?", mins, u.ID)
-//	Reply(bot, msg, fmt.Sprintf("Напоминания установлены каждые %d часов.", hours))
-//
-//	StartWaterReminderForUser(bot, u.TgID, mins)
-//}
-
 var waterReminders = map[int64]chan bool{}
 
-func (waterHandler *WaterHandler) StartWaterReminders(bot *tgbotapi.BotAPI, uRepo *repositories.UserRepo) {
+func (waterHandler *WaterHandler) StartWaterReminders(uRepo *repositories.UserRepo) {
 	rows, err := uRepo.GetQueryWaterReminders(waterHandler.bot)
 	if err != nil {
 		log.Println(err)

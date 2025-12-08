@@ -26,8 +26,7 @@ func NewFoodHandler(Bot *tgbotapi.BotAPI) *FoodHandler {
 	return &FoodHandler{bot: Bot}
 }
 
-// Обработчик кнопки "Добавить еду"
-func (foodHandler *FoodHandler) AddFoodHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User) {
+func (foodHandler *FoodHandler) AddFoodHandler(msg *tgbotapi.Message) {
 	foodStates[msg.Chat.ID] = "waiting_calories"
 
 	text := `🍎 *Добавление еды*
@@ -41,8 +40,7 @@ func (foodHandler *FoodHandler) AddFoodHandler(bot *tgbotapi.BotAPI, msg *tgbota
 	foodHandler.bot.Send(msgOut)
 }
 
-// Обработчик ввода данных для еды
-func (foodHandler *FoodHandler) HandleFoodInput(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User,
+func (foodHandler *FoodHandler) HandleFoodInput(msg *tgbotapi.Message, u domain.User,
 	mealRepo *repositories.MealRepo, userRepo *repositories.UserRepo, appHandler *AppHandler) {
 	state, exists := foodStates[msg.Chat.ID]
 	if !exists {
@@ -69,31 +67,28 @@ func (foodHandler *FoodHandler) HandleFoodInput(bot *tgbotapi.BotAPI, msg *tgbot
 		kcal, exists := foodTempData[msg.Chat.ID]
 		if !exists {
 			delete(foodStates, msg.Chat.ID)
-			appHandler.ShowMainMenu(foodHandler.bot, msg, u)
+			appHandler.ShowMainMenu(foodHandler.bot, msg)
 			return
 		}
 
 		desc := text
 
 		err := mealRepo.SaveFoodWithCalories(*u.GetId(), desc, kcal)
-		//_, err := adapter.DB.Exec("INSERT INTO meals (user_id, description, calories) VALUES (?, ?, ?)", u.ID, desc, kcal)
 		if err != nil {
 			appHandler.Reply(foodHandler.bot, msg, "Ошибка сохранения еды")
 			delete(foodStates, msg.Chat.ID)
 			delete(foodTempData, msg.Chat.ID)
-			appHandler.ShowMainMenu(foodHandler.bot, msg, u)
+			appHandler.ShowMainMenu(foodHandler.bot, msg)
 			return
 		}
 
 		userRepo.UpdateCalories(kcal, *u.GetId())
-		//_, _ = adapter.DB.Exec("UPDATE users SET calories_today = calories_today + ? WHERE id = ?", kcal, u.ID)
-
 		appHandler.Reply(foodHandler.bot, msg, fmt.Sprintf("✅ Добавлено: *%s* — *%d ккал*", desc, kcal))
 
 		delete(foodStates, msg.Chat.ID)
 		delete(foodTempData, msg.Chat.ID)
 
-		appHandler.ShowMainMenu(foodHandler.bot, msg, u)
+		appHandler.ShowMainMenu(foodHandler.bot, msg)
 		return
 	}
 }
@@ -103,37 +98,10 @@ func (foodHandler *FoodHandler) IsAddingFood(chatID int64) bool {
 	return exists && (state == "waiting_calories" || state == "waiting_description")
 }
 
-// //func no usages
-//func AddFoodCommandHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User) {
-//	args := strings.SplitN(msg.Text, " ", 3)
-//	if len(args) < 3 {
-//		AddFoodHandler(bot, msg, u)
-//		return
-//	}
-//
-//	kcal, err := strconv.Atoi(args[1])
-//	if err != nil {
-//		Reply(bot, msg, "Неверный формат калорий")
-//		return
-//	}
-//	desc := args[2]
-//
-//	//_, err = adapter.DB.Exec("INSERT INTO meals (user_id, description, calories) VALUES (?, ?, ?)", u.ID, desc, kcal)
-//	if err != nil {
-//		Reply(bot, msg, "Ошибка сохранения еды")
-//		return
-//	}
-//
-//	//_, _ = adapter.DB.Exec("UPDATE users SET calories_today = calories_today + ? WHERE id = ?", kcal, u.ID)
-//
-//	Reply(bot, msg, fmt.Sprintf("Добавлено: %s — %d ккал", desc, kcal))
-//}
-
-func (foodHandler *FoodHandler) CheckFoodHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, u domain.User,
+func (foodHandler *FoodHandler) CheckFoodHandler(msg *tgbotapi.Message, u domain.User,
 	userRepo *repositories.UserRepo, mealRepo *repositories.MealRepo, appHandler *AppHandler) {
 	startOfDay := time.Now().Format("2006-01-02") + " 00:00:00"
 	rows, err := mealRepo.GetAllFoodByDay(*u.GetId(), startOfDay)
-	//rows, err := adapter.DB.Query("SELECT description, calories, created_at FROM meals WHERE user_id = ? AND created_at >= ?", u.ID, startOfDay)
 	if err != nil {
 		appHandler.Reply(foodHandler.bot, msg, "Ошибка чтения базы")
 		return
@@ -154,7 +122,6 @@ func (foodHandler *FoodHandler) CheckFoodHandler(bot *tgbotapi.BotAPI, msg *tgbo
 	if *u.GetCaloriesGoal() == 0 {
 		u.SetCaloriesGoal(1000)
 		userRepo.UpdateGoalCalories(*u.GetCaloriesGoal(), *u.GetId())
-		//_, _ = userRepo.Db.Exec("UPDATE users SET calories_goal = ? WHERE id = ?", u.CaloriesGoal, u.ID)
 	}
 
 	remaining := *u.GetCaloriesGoal() - total

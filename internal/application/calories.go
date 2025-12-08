@@ -5,7 +5,6 @@ import (
 	"math"
 )
 
-// Mifflin-St Jeor formula
 func (actHandler *ActHandler) CalculateBMR(weightKg float64, heightCm int, age int, male bool) float64 {
 	// BMR = 10W + 6.25H - 5A  -161 (female) / + 5 (male)
 	if male {
@@ -40,7 +39,6 @@ func (actHandler *ActHandler) GoalAdjustment(goal domain.Goal) float64 {
 	}
 }
 
-// Рассчитать дневную норму калорий для пользователя
 func (actHandler *ActHandler) CalcDailyCalories(u domain.User) int {
 	bmr := actHandler.CalculateBMR(*u.GetWeightKg(), *u.GetHeightCm(), *u.GetAge(), true)
 	af := actHandler.ActivityFactor(*u.GetActivityLevel())
@@ -49,8 +47,6 @@ func (actHandler *ActHandler) CalcDailyCalories(u domain.User) int {
 	return int(math.Round(cal))
 }
 
-// Подсчёт сожжённых калорий по активности:
-// calories = MET * weight_kg * hours
 func (actHandler *ActHandler) CaloriesForActivity(activity string, durationMinutes int, weightKg float64) int {
 	met := actHandler.METForActivity(activity)
 	hours := float64(durationMinutes) / 60.0

@@ -21,7 +21,7 @@ func NewCallbackHandler(Bot *tgbotapi.BotAPI) *CallbackHandler {
 
 var activityStates = map[int64]string{}
 
-func (callbackHandler *CallbackHandler) HandleCallback(bot *tgbotapi.BotAPI, cb *tgbotapi.CallbackQuery,
+func (callbackHandler *CallbackHandler) HandleCallback(cb *tgbotapi.CallbackQuery,
 	uRepo *repositories.UserRepo, waterHandler *WaterHandler, actHandler *ActHandler, appHandler *AppHandler) {
 	data := cb.Data
 	chatID := cb.Message.Chat.ID
@@ -100,19 +100,16 @@ func (callbackHandler *CallbackHandler) HandleWaterCallback(bot *tgbotapi.BotAPI
 	case "250", "500":
 		ml, _ := strconv.Atoi(data)
 		uRepo.UpdateWaterToday(ml, *user.GetId())
-		//_, _ = uRepo.Db.Exec("UPDATE users SET water_today = water_today + ? WHERE id = ?", ml, user.ID)
 		callbackHandler.Send(bot, chatID, fmt.Sprintf("💧 Добавлено %d мл воды сегодня!", ml))
 
 	case "60", "120", "240":
 		mins, _ := strconv.Atoi(data)
 		uRepo.UpdateWaterIntervalMinutes(mins, *user.GetId())
-		//_, _ = uRepo.Db.Exec("UPDATE users SET water_interval_minutes = ? WHERE id = ?", mins, user.ID)
 		waterHandler.StartWaterReminderForUser(bot, *user.GetTgID(), mins)
 		callbackHandler.Send(bot, chatID, fmt.Sprintf("⏰ Напоминания установлены каждые %d минут", mins))
 
 	case "off":
 		uRepo.UpdateWaterIntervalMinutesOff(*user.GetId())
-		//_, _ = uRepo.Db.Exec("UPDATE users SET water_interval_minutes = 0 WHERE id = ?", user.ID)
 		callbackHandler.Send(bot, chatID, "🔕 Напоминания о воде отключены")
 	}
 

@@ -82,24 +82,8 @@ func (u *User) GetWaterIntervalMinutes() *int {
 	return &u.waterIntervalMinutes
 }
 
-func (u *User) GetRegisteredAt() *time.Time {
-	return &u.registeredAt
-}
-
 func (u *User) SetCaloriesGoal(caloriesGoal int) {
 	u.caloriesGoal = caloriesGoal
-}
-
-func (u *User) SetWaterGoal(waterGoal int) {
-	u.waterGoal = waterGoal
-}
-
-func (u *User) SetWaterToday(waterToday int) {
-	u.waterToday = waterToday
-}
-
-func (u *User) SetCaloriesToday(caloriesToday int) {
-	u.caloriesToday = caloriesToday
 }
 
 func (u *User) SetHeightCm(heightCm int) {

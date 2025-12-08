@@ -25,7 +25,6 @@ func (KeyboardHandler) MainMenuKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	)
 }
 
-// Минимальная клавиатура (только старт)
 func (KeyboardHandler) StartKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	return tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
@@ -67,23 +66,6 @@ func (KeyboardHandler) ActivityInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
 		),
 	)
 }
-
-//func no usage
-//func QuickFoodInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
-//	return tgbotapi.NewInlineKeyboardMarkup(
-//		tgbotapi.NewInlineKeyboardRow(
-//			tgbotapi.NewInlineKeyboardButtonData("🍎 Яблоко (52 ккал)", "food:apple"),
-//			tgbotapi.NewInlineKeyboardButtonData("🍌 Банан (89 ккал)", "food:banana"),
-//		),
-//		tgbotapi.NewInlineKeyboardRow(
-//			tgbotapi.NewInlineKeyboardButtonData("🥪 Сэндвич (300 ккал)", "food:sandwich"),
-//			tgbotapi.NewInlineKeyboardButtonData("🍚 Рис (130 ккал)", "food:rice"),
-//		),
-//		tgbotapi.NewInlineKeyboardRow(
-//			tgbotapi.NewInlineKeyboardButtonData("➕ Своя еда", "food:custom"),
-//		),
-//	)
-//}
 
 func (KeyboardHandler) GoalButtons() tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(

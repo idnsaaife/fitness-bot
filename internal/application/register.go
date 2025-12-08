@@ -96,11 +96,9 @@ func (appHandler *AppHandler) HandleRegistration(bot *tgbotapi.BotAPI, msg *tgbo
 		return true
 
 	case RegGoal:
-		// пользователь должен выбрать из inline кнопки — текст сюда не дойдёт
 		return true
 
 	case RegActivity:
-		// тоже inline кнопки
 		return true
 	}
 
@@ -145,7 +143,6 @@ func (appHandler *AppHandler) FinalizeRegistration(bot *tgbotapi.BotAPI, tgID in
 
 	cal := actHandler.CalcDailyCalories(u)
 	userRepo.UpdateGoalCalories(cal, *u.GetId())
-	//adapter.DB.Exec("UPDATE users SET calories_goal = ? WHERE id = ?", cal, u.ID)
 
 	callbackHandler.Send(bot, tgID, fmt.Sprintf(
 		"Регистрация завершена! 🎉\n\n"+
